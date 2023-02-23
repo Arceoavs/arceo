@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pocketbase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pocketbase
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pocketbase
+    spec:
+      containers:
+        - name: pocketbase
+          image: ghcr.io/muchobien/pocketbase:latest
+          ports:
+            - containerPort: 8090
+          volumeMounts:
+            - name: pocketbase-data
+              mountPath: /pb_data
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          resources:
+            requests:
+              memory: 2Gi
+            limits:
+              memory: 4Gi
+              cpu: 3000m
+      volumes:
+        - name: pocketbase-data
+          persistentVolumeClaim:
+            claimName: pocketbase-pvc
